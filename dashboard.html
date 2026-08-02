@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar·München — PV Potential Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="b1">Solar</span><span class="b2">München</span></div>
+    <div class="brand-sub">PV Potential Observatory</div>
+    <nav class="nav">
+      <button data-go="overview" class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Overview
+      </button>
+      <button data-go="map">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Spatial Map
+      </button>
+      <button data-go="analytics">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </button>
+    </nav>
+    <div class="side-foot">Data: OpenStreetMap<br>Radiation: EU PVGIS<br>Engine: Shapely + GeoPandas</div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="crumb">Solar·München / <b>overview</b></div>
+      <div class="actions">
+        <div class="lang"><button data-l="en" class="on">EN</button><button data-l="de">DE</button></div>
+        <button class="ibtn" id="themeBtn" title="Theme">◐</button>
+      </div>
+    </div>
+
+    <section class="view active" data-view="overview">
+      <div class="hero">
+        <div>
+          <div class="kicker" id="heroTag">ROOF-BY-ROOF ASSESSMENT</div>
+          <h1 id="heroH">How much sun is<br>sleeping on these roofs?</h1>
+          <p id="heroP">A spatial photovoltaic audit of every qualified building in Maxvorstadt.</p>
+        </div>
+        <div class="bignum"><div class="n serif" id="heroNum">0</div><div class="u" id="heroU">GWh / year unlockable</div></div>
+      </div>
+      <div class="kpis" id="kpiRow"></div>
+      <div class="glance">
+        <div class="card"><div class="kicker" id="glanceK" style="margin-bottom:12px">AT A GLANCE</div><div class="lead" id="leadTxt"></div></div>
+        <div class="card"><div class="minis">
+          <div class="mini"><div class="v" id="mEffV">—</div><div class="k" id="mEffK">median output density</div><div class="k" id="mEffU" style="color:var(--faint)">kWh per m²</div></div>
+          <div class="mini"><div class="v" id="mTopV">—</div><div class="k" id="mTopK">top 20% of roofs</div><div class="k" id="mTopU" style="color:var(--faint)">of all energy</div></div>
+          <div class="mini"><div class="v" id="mAvgV">—</div><div class="k" id="mAvgK">average per roof</div><div class="k" id="mAvgU" style="color:var(--faint)">kWh / year</div></div>
+          <div class="mini"><div class="v" id="mExcV">—</div><div class="k" id="mExcK">excellent roofs</div><div class="k" id="mExcU" style="color:var(--faint)">> 10 MWh / year</div></div>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="view" data-view="map">
+      <div class="map-head"><div><div class="kicker" id="mapK">GEOSPATIAL</div><h2 id="mapH">Interactive Building Map</h2></div></div>
+      <div class="map-stage">
+        <div id="map"></div>
+        <div class="float stats">
+          <div class="row"><span id="sShowing">Showing</span><b id="stN">0</b></div>
+          <div class="row"><span id="sOutLbl">their output</span><b id="stOut">0</b></div>
+          <div class="row" style="color:var(--faint);font-size:11px"><span id="sOf">of</span>&nbsp;<span id="sSample">sampled roofs</span></div>
+        </div>
+        <div class="float legend" id="legend"></div>
+        <div class="map-tools"><button id="baseBtn" title="Basemap">🗺️</button><button id="fitBtn" title="Fit">⤢</button></div>
+        <div class="float slider">
+          <label><span id="slLabel">Minimum annual output </span><b id="slVal">0</b></label>
+          <input type="range" id="slider" min="0" value="0">
+        </div>
+      </div>
+    </section>
+
+    <section class="view" data-view="analytics">
+      <div class="a-head">
+        <div><div class="kicker" id="aK">DISTRIBUTION</div><h2 id="aH">Six readings that actually mean something</h2></div>
+        <!-- ✅ زر Reset Charts -->
+        <button class="reset-btn" id="resetChartsBtn" title="Reset all charts to default view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          <span>Reset Charts</span>
+        </button>
+      </div>
+      <div class="a-grid">
+        <div class="cell"><div class="ct" data-t="c_lorenz">Inequality — Lorenz & Gini</div><div class="cw" data-w="w_lorenz"></div><div id="pLor" class="plot"></div></div>
+        <div class="cell"><div class="ct" data-t="c_type">Yield by building type</div><div class="cw" data-w="w_type"></div><div id="pType" class="plot"></div></div>
+        <div class="cell"><div class="ct" data-t="c_spatial">Where the power lives</div><div class="cw" data-w="w_spatial"></div><div id="pSpa" class="plot"></div></div>
+        <div class="cell"><div class="ct" data-t="c_dist">Output distribution</div><div class="cw" data-w="w_dist"></div><div id="pDist" class="plot"></div></div>
+        <div class="cell"><div class="ct" data-t="c_marg">Marginal build-out</div><div class="cw" data-w="w_marg"></div><div id="pMarg" class="plot"></div></div>
+        <div class="cell"><div class="ct" data-t="c_top">Top producers</div><div class="cw" data-w="w_top"></div><div id="pTop" class="plot"></div></div>
+      </div>
+      <div class="read-strip" id="readList"></div>
+    </section>
+  </main>
+</div>
+<script src="buildings.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

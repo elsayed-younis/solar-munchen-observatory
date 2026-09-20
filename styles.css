@@ -127,3 +127,7 @@ h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.02em;
   .a-grid{grid-template-rows:none;} .cell .plot{height:260px;} .hero .bignum{text-align:left;}
   .read-strip{flex-wrap:wrap;overflow:visible;} .read-strip .it{min-width:46%;}
 }
+[data-theme="dark"] .leaflet-tile{filter:invert(1) hue-rotate(190deg) saturate(0.5) brightness(0.85) contrast(0.92);}
+[data-theme="dark"] .leaflet-container{background:#14110d;}
+[data-theme="dark"] .leaflet-control-attribution{background:rgba(20,17,13,0.6);color:var(--muted);}
+[data-theme="dark"] .leaflet-control-attribution a{color:var(--muted);}

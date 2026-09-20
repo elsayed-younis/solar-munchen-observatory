@@ -155,17 +155,23 @@ const SCALE = [[0, '#4fb0a8'], [0.5, '#f5a623'], [1, '#e8632a']];
 
 function buildCharts() {
   const L = base();
+  const lastBin = D.hist.bins[D.hist.bins.length - 1] || 1;
+  const lastMargX = D.marginal.x[D.marginal.x.length - 1] || 1;
+  const maxMargY = Math.max(...D.marginal.y) || 1;
+  const maxTop = Math.max(...D.top.map(t => t.output_kwh)) || 1;
+
   Plotly.newPlot('pLor', [{
     x: D.lorenz.x, y: D.lorenz.y, type: 'scatter', mode: 'lines', fill: 'tozeroy', showlegend: false,
     line: { color: '#f5a623', width: 2.6 }, fillcolor: 'rgba(245,166,35,0.13)',
     hovertemplate: '%{x:.0f}% ' + T('ax_roofs') + ' → %{y:.0f}% ' + T('ax_output_pct') + '<extra></extra>'
   }], {
-    ...L, xaxis: { ...L.xaxis, title: T('ax_roofs'), range: [0, 100] },
-    yaxis: { ...L.yaxis, title: T('ax_output_pct'), range: [0, 100] },
+    ...L,
+    xaxis: { ...L.xaxis, title: T('ax_roofs'), range: [0, 100], fixedrange: true },
+    yaxis: { ...L.yaxis, title: T('ax_output_pct'), range: [0, 100], fixedrange: true },
     shapes: [{ type: 'line', x0: 0, y0: 0, x1: 100, y1: 100, line: { color: 'rgba(155,147,132,0.5)', width: 1.4, dash: 'dot' } }],
     annotations: [
       { x: 62, y: 24, text: 'Gini = ' + D.gini, showarrow: false, font: { size: 17, color: '#e8632a', family: 'Space Grotesk' } },
-      { x: 50, y: 54, text: 'equality', showarrow: false, font: { size: 11, color: '#9b9384' } }
+      { x: 46, y: 52, text: 'equality', showarrow: false, font: { size: 11, color: '#9b9384' } }
     ]
   }, CFG);
 
@@ -176,8 +182,9 @@ function buildCharts() {
       marker: { color: bt.map((_, i) => i), colorscale: SCALE, showscale: false },
       hovertemplate: '%{y}<br>%{x:,} ' + T('ax_kwh') + '<extra></extra>'
     }], {
-      ...L, xaxis: { ...L.xaxis, title: T('ax_type_x') },
-      yaxis: { ...L.yaxis, automargin: true, tickfont: { size: 12.5 } }, margin: { ...L.margin, l: 96 }
+      ...L, xaxis: { ...L.xaxis, title: T('ax_type_x'), rangemode: 'tozero', fixedrange: true },
+      yaxis: { ...L.yaxis, automargin: true, tickfont: { size: 12.5 }, fixedrange: true },
+      margin: { ...L.margin, l: 96 }
     }, CFG);
   } else {
     $('#pType').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--faint);font-size:13px">building-type tags unavailable</div>';
@@ -186,17 +193,20 @@ function buildCharts() {
   Plotly.newPlot('pSpa', [{
     x: D.spatial.lon, y: D.spatial.lat, mode: 'markers', type: 'scatter', showlegend: false,
     marker: { color: D.spatial.out, colorscale: SCALE, size: 5, opacity: 0.72, colorbar: { thickness: 8, len: 0.6, tickfont: { size: 10 }, outlinewidth: 0 } },
-    hovertemplate: '%{y:.3f}, %{x:.3f}<br>%{marker.color:,} ' + T('ax_kwh') + '<extra></extra>'
+    hovertemplate: '%{y:.4f}, %{x:.4f}<br>%{marker.color:,} ' + T('ax_kwh') + '<extra></extra>'
   }], {
-    ...L, xaxis: { ...L.xaxis, title: T('ax_lon'), tickformat: '.2f' },
-    yaxis: { ...L.yaxis, title: T('ax_lat'), tickformat: '.2f', scaleanchor: 'x' }
+    ...L,
+    xaxis: { ...L.xaxis, title: T('ax_lon'), tickformat: '.3f', fixedrange: true },
+    yaxis: { ...L.yaxis, title: T('ax_lat'), tickformat: '.3f', scaleanchor: 'x', fixedrange: true }
   }, CFG);
 
   Plotly.newPlot('pDist', [{
     x: D.hist.bins, y: D.hist.counts, type: 'bar', showlegend: false, marker: { color: '#4fb0a8' },
     hovertemplate: '~%{x:,} ' + T('ax_kwh') + '<br>%{y} ' + T('ax_count') + '<extra></extra>'
   }], {
-    ...L, xaxis: { ...L.xaxis, title: T('ax_dist_x') }, yaxis: { ...L.yaxis, title: T('ax_count') },
+    ...L,
+    xaxis: { ...L.xaxis, title: T('ax_dist_x'), range: [0, lastBin * 1.06], fixedrange: true },
+    yaxis: { ...L.yaxis, title: T('ax_count'), rangemode: 'tozero', fixedrange: true },
     shapes: [
       { type: 'line', x0: D.median_out, x1: D.median_out, y0: 0, y1: 1, yref: 'paper', line: { color: '#f5a623', width: 1.8, dash: 'dash' } },
       { type: 'line', x0: D.excellent_thr, x1: D.excellent_thr, y0: 0, y1: 1, yref: 'paper', line: { color: '#e8632a', width: 1.8, dash: 'dash' } }
@@ -212,7 +222,9 @@ function buildCharts() {
     line: { color: '#4fb0a8', width: 2.4 }, fillcolor: 'rgba(79,176,168,0.12)',
     hovertemplate: '%{x:,} roofs → %{y} MW<extra></extra>'
   }], {
-    ...L, xaxis: { ...L.xaxis, title: T('ax_marg_x') }, yaxis: { ...L.yaxis, title: T('ax_marg_y') },
+    ...L,
+    xaxis: { ...L.xaxis, title: T('ax_marg_x'), range: [0, lastMargX * 1.04], fixedrange: true },
+    yaxis: { ...L.yaxis, title: T('ax_marg_y'), range: [0, maxMargY * 1.1], fixedrange: true },
     annotations: [{
       x: D.marginal_note.n, y: D.marginal_note.mw, text: 'top 10% → ' + D.marginal_note.mw + ' MW',
       showarrow: true, arrowcolor: '#e8632a', arrowhead: 2, ax: 34, ay: -26,
@@ -225,7 +237,10 @@ function buildCharts() {
     x: t10.map(t => t.output_kwh), y: t10.map((_, i) => '#' + (i + 1)), type: 'bar', orientation: 'h', showlegend: false,
     marker: { color: '#e8632a' }, hovertemplate: '#%{y}<br>%{x:,} ' + T('ax_kwh') + '<extra></extra>'
   }], {
-    ...L, xaxis: { ...L.xaxis, title: T('ax_kwh') }, yaxis: { ...L.yaxis, autorange: 'reversed' }, margin: { ...L.margin, l: 34 }
+    ...L,
+    xaxis: { ...L.xaxis, title: T('ax_kwh'), range: [0, maxTop * 1.06], fixedrange: true },
+    yaxis: { ...L.yaxis, autorange: 'reversed', fixedrange: true },
+    margin: { ...L.margin, l: 34 }
   }, CFG);
 
   window._charts = true;
@@ -341,6 +356,10 @@ function applySlider(min) {
   $('#stOut').textContent = fmt(Math.round(sum / 1000)) + ' MWh';
 }
 function refreshMapStats() { if ($('#slider')) applySlider(+$('#slider').value); }
+
+const resetBtn = document.getElementById('resetBtn') ||
+  Array.from(document.querySelectorAll('button')).find(b => /reset/i.test(b.textContent || ''));
+if (resetBtn) resetBtn.onclick = () => { window._charts = null; buildCharts(); };
 
 $$('.lang button').forEach(b => b.onclick = () => setLang(b.dataset.l));
 renderKpis(); renderLegend(); renderGuide();
